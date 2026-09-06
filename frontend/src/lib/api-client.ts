@@ -113,9 +113,13 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
+export interface RequestOptions extends RequestInit {
+  timeoutMs?: number;
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<T> {
   const token = getStoredToken();
   const headers: Record<string, string> = {
@@ -133,15 +137,30 @@ async function request<T>(
   }
 
   const url = `${getApiBaseUrl()}${endpoint}`;
+  const isUpload = options.body instanceof FormData || endpoint.includes('/upload');
+  const timeoutMs = options.timeoutMs ?? (isUpload ? 300000 : 30000); // 5 min for file upload, 30s standard
+
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error(`Request timed out after ${Math.round(timeoutMs / 1000)} seconds.`));
+  }, timeoutMs);
+
+  if (options.signal) {
+    if (options.signal.aborted) {
+      controller.abort(options.signal.reason);
+    } else {
+      options.signal.addEventListener('abort', () => {
+        controller.abort(options.signal?.reason);
+      });
+    }
+  }
 
   let response: Response;
   try {
     response = await fetch(url, {
       ...options,
       headers,
-      signal: options.signal || controller.signal,
+      signal: controller.signal,
     });
   } finally {
     clearTimeout(timeoutId);
