@@ -1,0 +1,14 @@
+torch
+transformers
+tiktoken
+streamlit
+plotly
+matplotlib
+seaborn
+numpy
+pandas
+scikit-learn
+pypdf
+python-docx
+sentence-transformers
+faiss-cpu

@@ -1,0 +1,1 @@
+LocalGPT is a fully local conversational system with zero data leakage.
