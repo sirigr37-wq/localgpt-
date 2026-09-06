@@ -115,6 +115,9 @@ async def stream_chat(
     async def sse_event_stream():
         full_content = []
         try:
+            # Send initial keepalive comment to immediately establish connection with proxies
+            yield ": connected\n\n"
+
             async for chunk in llm_provider.stream_response(llm_messages):
                 full_content.append(chunk)
                 data = json.dumps({"token": chunk})

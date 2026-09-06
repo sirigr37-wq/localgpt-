@@ -162,6 +162,11 @@ class RAGService(BaseRAGService):
         if not query or not query.strip() or not user_id:
             return []
 
+        # Fast path: check if user has any documents/chunks indexed before touching embedding model
+        from app.services.rag.vector_store import has_user_vectors
+        if not has_user_vectors(user_id):
+            return []
+
         try:
             # 1. Embed query
             query_emb = await asyncio.to_thread(embed_text, query.strip())

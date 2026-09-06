@@ -56,6 +56,21 @@ def get_user_vector_dir(user_id: str) -> str:
     return user_dir
 
 
+def has_user_vectors(user_id: str) -> bool:
+    """
+    Fast check if the user has an initialized FAISS vector store and chunks.
+    Avoids expensive embedding model initialization for queries without indexed documents.
+    """
+    base_dir = os.path.abspath(settings.FAISS_INDEX_DIR)
+    safe_user = os.path.basename(user_id)
+    user_dir = os.path.abspath(os.path.join(base_dir, safe_user))
+    if not os.path.exists(user_dir):
+        return False
+    index_path = os.path.join(user_dir, INDEX_FILENAME)
+    chunks_path = os.path.join(user_dir, CHUNKS_FILENAME)
+    return os.path.exists(index_path) and os.path.exists(chunks_path)
+
+
 def load_user_vector_store(user_id: str) -> Optional[Dict[str, Any]]:
     """
     Load a user's FAISS index and chunk metadata from their isolated directory.
