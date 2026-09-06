@@ -1,9 +1,11 @@
 export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    // In browser, use relative path so requests proxy through Next.js rewrite.
+    // This allows seamless access across all devices and tunnels without Mixed Content issues.
+    return '/api/v1';
+  }
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-  if (typeof window !== 'undefined') {
-    return '/api/v1';
   }
   return 'http://127.0.0.1:8000/api/v1';
 }
@@ -131,10 +133,19 @@ async function request<T>(
   }
 
   const url = `${getApiBaseUrl()}${endpoint}`;
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      signal: options.signal || controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (response.status === 204) {
     return null as T;
