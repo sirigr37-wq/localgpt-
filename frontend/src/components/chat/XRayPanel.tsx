@@ -4,24 +4,17 @@ import React, { useState, useMemo } from 'react';
 import {
   Activity,
   X,
-  Cpu,
   Layers,
   FileText,
-  Sparkles,
-  Sliders,
-  Database,
   Hash,
   Binary,
   Grid,
   TrendingUp,
   BarChart3,
   Network,
-  ChevronRight,
-  Info,
-  Layers as LayersIcon,
   Compass,
 } from 'lucide-react';
-import { ChatMessage, UserSettings, Conversation } from '@/types/chat';
+import { ChatMessage, UserSettings } from '@/types/chat';
 
 interface XRayPanelProps {
   isOpen: boolean;
@@ -32,13 +25,22 @@ interface XRayPanelProps {
   isStreaming: boolean;
 }
 
+// Model Specs (Qwen2.5 / Transformer Specs)
+const MODEL_SPECS = {
+  name: 'Qwen2.5-1.5B-Instruct / Hosted LLM',
+  numLayers: 28,
+  hiddenSize: 1536,
+  numAttentionHeads: 12,
+  numKvHeads: 2,
+  intermediateSize: 8960,
+  vocabSize: 151936,
+  headDim: 128, // 1536 / 12
+};
+
 export const XRayPanel: React.FC<XRayPanelProps> = ({
   isOpen,
   onClose,
   lastMessage,
-  settings,
-  conversation,
-  isStreaming,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'tokens' | 'embeddings' | 'layers' | 'attention' | 'hidden_states' | 'logits' | 'rag' | 'architecture'
@@ -46,18 +48,6 @@ export const XRayPanel: React.FC<XRayPanelProps> = ({
 
   const [selectedHead, setSelectedHead] = useState<number>(0);
   const [selectedLayer, setSelectedLayer] = useState<number>(0);
-
-  // Model Specs (Qwen2.5 / Transformer Specs)
-  const MODEL_SPECS = {
-    name: 'Qwen2.5-1.5B-Instruct / Hosted LLM',
-    numLayers: 28,
-    hiddenSize: 1536,
-    numAttentionHeads: 12,
-    numKvHeads: 2,
-    intermediateSize: 8960,
-    vocabSize: 151936,
-    headDim: 128, // 1536 / 12
-  };
 
   const messageText = lastMessage?.content || 'Hello world! LocalGPT Phase 3 with full LLM X-Ray analysis.';
 

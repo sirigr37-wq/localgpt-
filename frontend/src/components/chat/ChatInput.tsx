@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Paperclip, Square, Mic, MicOff } from 'lucide-react';
+import { ArrowUp, Paperclip, Square, Mic } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -17,9 +17,27 @@ interface SpeechRecognitionEvent extends Event {
   resultIndex: number;
 }
 
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message?: string;
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+function getSpeechRecognitionClass(): SpeechRecognitionConstructor | null {
+  if (typeof window === 'undefined') return null;
+  const win = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  };
+  return win.SpeechRecognition || win.webkitSpeechRecognition || null;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -33,18 +51,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [micSupported, setMicSupported] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
-
-  // Check speech recognition support on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setMicSupported(false);
-      }
-    }
-  }, []);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   // Auto-resize textarea height based on content
   useEffect(() => {
@@ -64,9 +71,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       return;
     }
 
-    if (typeof window === 'undefined') return;
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognitionClass();
 
     if (!SpeechRecognition) {
       alert('Speech Recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari.');
