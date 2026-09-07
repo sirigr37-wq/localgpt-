@@ -204,7 +204,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           setUploadTasks((prev) => prev.filter((t) => t.id !== taskId));
         }, 3000);
       } catch (err: unknown) {
-        console.error('Failed to upload file:', err);
+        console.warn('Failed to upload file:', err);
         const errorMsg =
           err instanceof Error ? err.message : 'Server rejected file upload.';
         setUploadTasks((prev) =>
@@ -227,7 +227,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         onFilesUpdated(remaining);
       }
     } catch (err: unknown) {
-      console.error('Failed to delete document:', err);
+      console.warn('Failed to delete document:', err);
       const msg = err instanceof Error ? err.message : 'Failed to delete document.';
       setGlobalError(msg);
     } finally {
@@ -248,7 +248,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         onFilesUpdated([]);
       }
     } catch (err: unknown) {
-      console.error('Failed to clear documents:', err);
+      console.warn('Failed to clear documents:', err);
       const msg = err instanceof Error ? err.message : 'Failed to clear documents.';
       setGlobalError(msg);
     } finally {
@@ -263,7 +263,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
       const res = await apiClient.documents.search(searchQuery.trim(), searchTopK);
       setSearchResults(res.matches || []);
     } catch (err: unknown) {
-      console.error('Failed to run test search:', err);
+      console.warn('Failed to run test search:', err);
       const msg = err instanceof Error ? err.message : 'Vector search failed.';
       setGlobalError(msg);
     } finally {

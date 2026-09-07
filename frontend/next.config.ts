@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  allowedDevOrigins: [
+    "*.trycloudflare.com",
+    "localhost:3000",
+    "127.0.0.1:3000",
+  ],
   async rewrites() {
     return [
       {

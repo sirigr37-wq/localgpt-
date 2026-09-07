@@ -14,15 +14,15 @@ import {
   Network,
   Compass,
 } from 'lucide-react';
-import { ChatMessage, UserSettings } from '@/types/chat';
+import { ChatMessage, UserSettings, Conversation } from '@/types/chat';
 
 interface XRayPanelProps {
   isOpen: boolean;
   onClose: () => void;
   lastMessage: ChatMessage | null;
-  settings: UserSettings;
-  conversation: Conversation | null;
-  isStreaming: boolean;
+  settings?: UserSettings;
+  conversation?: Conversation | null;
+  isStreaming?: boolean;
 }
 
 // Model Specs (Qwen2.5 / Transformer Specs)
@@ -41,6 +41,9 @@ export const XRayPanel: React.FC<XRayPanelProps> = ({
   isOpen,
   onClose,
   lastMessage,
+  settings,
+  conversation,
+  isStreaming,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'tokens' | 'embeddings' | 'layers' | 'attention' | 'hidden_states' | 'logits' | 'rag' | 'architecture'
@@ -831,15 +834,15 @@ export const XRayPanel: React.FC<XRayPanelProps> = ({
             <div className="grid grid-cols-3 gap-2">
               <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
                 <p className="text-[10px] text-slate-400">Temperature</p>
-                <p className="text-base font-bold text-blue-400 font-mono">{settings.temperature.toFixed(2)}</p>
+                <p className="text-base font-bold text-blue-400 font-mono">{(settings?.temperature ?? 0.7).toFixed(2)}</p>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
                 <p className="text-[10px] text-slate-400">Top-P Nucleus</p>
-                <p className="text-base font-bold text-purple-400 font-mono">{settings.topP.toFixed(2)}</p>
+                <p className="text-base font-bold text-purple-400 font-mono">{(settings?.topP ?? 0.9).toFixed(2)}</p>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
                 <p className="text-[10px] text-slate-400">Max Tokens</p>
-                <p className="text-base font-bold text-emerald-400 font-mono">{settings.maxTokens}</p>
+                <p className="text-base font-bold text-emerald-400 font-mono">{settings?.maxTokens ?? 2048}</p>
               </div>
             </div>
 

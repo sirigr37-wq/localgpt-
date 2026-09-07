@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,9 +28,14 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database schemas verified and initialized successfully.")
     except Exception as e:
-        logger.warning(
-            f"Database auto-creation encountered notice (normal if PostgreSQL server is external or requires migration): {e}"
-        )
+        logger.warning(f"Database auto-creation notice: {e}")
+
+    # Pre-warm embedding model in background thread to ensure instantaneous chat responses
+    try:
+        from app.services.rag.embeddings import load_embedding_model
+        asyncio.create_task(asyncio.to_thread(load_embedding_model))
+    except Exception as e:
+        logger.warning(f"Could not pre-warm embedding model: {e}")
 
     yield
 
@@ -62,7 +68,7 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
-        allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+        allow_origin_regex=r"^https?:\/\/.*(\.vercel\.app|\.trycloudflare\.com)$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -17,11 +17,15 @@ _CACHED_MODEL = None
 def load_embedding_model(model_name: str = EMBEDDING_MODEL_NAME):
     """
     Load SentenceTransformer embedding model. Reuses cached instance if already initialized.
+    Uses local cached weights first for ultra-fast, offline initialization without network stalls.
     """
     global _CACHED_MODEL
     if _CACHED_MODEL is None:
         from sentence_transformers import SentenceTransformer
-        _CACHED_MODEL = SentenceTransformer(model_name)
+        try:
+            _CACHED_MODEL = SentenceTransformer(model_name, local_files_only=True)
+        except Exception:
+            _CACHED_MODEL = SentenceTransformer(model_name)
     return _CACHED_MODEL
 
 

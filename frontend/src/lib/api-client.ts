@@ -1,11 +1,17 @@
 export function getApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    // In browser, use relative path so requests proxy through Next.js rewrite.
-    // This allows seamless access across all devices and tunnels without Mixed Content issues.
-    return '/api/v1';
-  }
+  // If an explicit API base URL is provided (e.g. Render backend on Vercel), prioritize it
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
+    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    // When running locally on localhost or 127.0.0.1, connect directly to FastAPI backend
+    // to prevent Next.js dev server proxy socket hangups (ECONNRESET) on streaming.
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:8000/api/v1';
+    }
+    // When accessed via remote tunnels or HTTPS domains, use relative '/api/v1' path.
+    return '/api/v1';
   }
   return 'http://127.0.0.1:8000/api/v1';
 }
