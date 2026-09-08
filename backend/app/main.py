@@ -75,6 +75,16 @@ else:
     )
 
 # Root-level health check convenience endpoint (Liveness probe)
+@app.get("/", tags=["Health"])
+async def root():
+    """Root endpoint for instant cloud platform readiness checks."""
+    return {
+        "status": "ok",
+        "message": f"{settings.PROJECT_NAME} is active",
+        "version": settings.VERSION,
+    }
+
+
 @app.get("/health", tags=["Health"])
 async def root_health():
     """Liveness probe: returns 200 OK if the FastAPI process is running."""

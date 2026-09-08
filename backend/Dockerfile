@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=10000
 
 WORKDIR /app
 
@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install lightweight CPU-only PyTorch first to prevent build spikes and ensure fast builds
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch
+
 # Install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -21,7 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose default backend port
-EXPOSE 8000
+EXPOSE 10000
 
-# Start FastAPI application using the cloud provider's assigned PORT or 8000
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Start FastAPI application using the cloud provider's assigned PORT via shell evaluation
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
