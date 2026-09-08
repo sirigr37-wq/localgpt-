@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
 
-    # CORS origins (supports JSON array or comma-separated URLs in production env)
-    CORS_ORIGINS: List[str] = [
+    # CORS origins (supports JSON array or comma-separated URLs or '*' in production env)
+    CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Any) -> List[str]:
         if isinstance(v, str):
+            if v.strip() == "*":
+                return ["*"]
             if v.strip().startswith("[") and v.strip().endswith("]"):
                 try:
                     return json.loads(v)
