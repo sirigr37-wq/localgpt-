@@ -1,3 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
 # FastAPI and Server
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
@@ -10,7 +13,6 @@ asyncpg>=0.29.0
 aiosqlite>=0.20.0
 aiofiles>=24.1.0
 alembic>=1.13.2
-
 
 # Authentication & Security
 python-jose[cryptography]>=3.3.0
