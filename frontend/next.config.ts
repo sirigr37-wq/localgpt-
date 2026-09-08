@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     "*.trycloudflare.com",
     "localhost:3000",
     "127.0.0.1:3000",
+    "172.*",
+    "192.168.*",
+    "10.*",
   ],
   async rewrites() {
     return [
