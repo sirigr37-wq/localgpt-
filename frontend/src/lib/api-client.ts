@@ -142,7 +142,7 @@ async function request<T>(
 
   const url = `${getApiBaseUrl()}${endpoint}`;
   const isUpload = options.body instanceof FormData || endpoint.includes('/upload');
-  const timeoutMs = options.timeoutMs ?? (isUpload ? 300000 : 30000); // 5 min for file upload, 30s standard
+  const timeoutMs = options.timeoutMs ?? (isUpload ? 300000 : 90000); // 5 min for file upload, 90s standard for cloud cold starts
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
