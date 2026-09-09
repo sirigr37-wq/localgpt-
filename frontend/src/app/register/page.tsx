@@ -18,6 +18,10 @@ export default function RegisterPage() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    clearError();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {

@@ -15,6 +15,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
+  useEffect(() => {
+    clearError();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
