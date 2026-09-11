@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearError = () => setError(null);
 
   // Initialize auth state by checking stored token
+  // NOTE: This is a silent session restore — errors must NEVER surface to the UI here.
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = getStoredToken();
@@ -47,10 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: userData.created_at,
           });
         } catch (err) {
+          // Token invalid/expired — clear silently, do NOT show error to user
           console.warn('Session verification failed; clearing invalid token.', err);
           setStoredToken(null);
           setToken(null);
           setUser(null);
+          setError(null); // ensure no stale errors show
         }
       }
       setIsLoading(false);
@@ -123,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.href = res.auth_url;
         return { configured: true };
       } else {
+        // 'not configured' is informational only — show as notice, NOT as red error
         return {
           configured: false,
           message:
@@ -131,7 +135,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
     } catch (err: unknown) {
-      const msg = err instanceof ApiError ? err.message : (err instanceof Error ? err.message : 'Failed to connect to Google OAuth service.');
+      // Only show red error banner for genuine network/server failures (not 404 cold-start)
+      const apiErr = err instanceof ApiError ? err : null;
+      if (apiErr && (apiErr.status === 404 || apiErr.status === 503)) {
+        // Backend is sleeping or route missing — treat as 'not configured' notice
+        return {
+          configured: false,
+          message: 'Backend is starting up, please wait a moment and try again.',
+        };
+      }
+      const msg = apiErr ? apiErr.message : (err instanceof Error ? err.message : 'Failed to connect to Google OAuth service.');
       setError(msg);
       return { configured: false, message: msg };
     }
