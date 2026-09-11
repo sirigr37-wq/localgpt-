@@ -20,6 +20,7 @@ export default function RegisterPage() {
 
   React.useEffect(() => {
     clearError();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,8 +40,9 @@ export default function RegisterPage() {
     try {
       await register(email, password, fullName.trim() || undefined);
       router.push('/');
-    } catch {
-      // Error handled by AuthContext
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setLocalError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +58,6 @@ export default function RegisterPage() {
       setGoogleNotice(res.message);
     }
   };
-
-  const displayError = localError || error;
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4">
@@ -109,10 +109,10 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {displayError && (
+        {localError && (
           <div className="p-3 mb-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-            <span>{displayError}</span>
+            <span>{localError}</span>
           </div>
         )}
 

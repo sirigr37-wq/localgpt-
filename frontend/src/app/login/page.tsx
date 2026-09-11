@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -8,29 +8,30 @@ import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, Info } from 'lucide-reac
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, initiateGoogleLogin, error, clearError } = useAuth();
+  const { login, initiateGoogleLogin, clearError } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    clearError();
-    setGoogleNotice(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Local error states — completely isolated from auth context background operations.
+  // These are ONLY set by explicit user actions on this page.
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoginError(null);
     setGoogleNotice(null);
     clearError();
     try {
       await login(email, password);
       router.push('/');
-    } catch {
-      // Error handled by AuthContext
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Invalid email or password.';
+      setLoginError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -39,11 +40,17 @@ export default function LoginPage() {
   const handleGoogleOAuth = async () => {
     setIsLoading(true);
     setGoogleNotice(null);
+    setLoginError(null);
     clearError();
-    const res = await initiateGoogleLogin();
-    setIsLoading(false);
-    if (!res.configured && res.message) {
-      setGoogleNotice(res.message);
+    try {
+      const res = await initiateGoogleLogin();
+      if (!res.configured && res.message) {
+        setGoogleNotice(res.message);
+      }
+    } catch {
+      setGoogleNotice('The server is waking up. Please wait ~30 seconds and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,9 +94,10 @@ export default function LoginPage() {
               d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
             />
           </svg>
-          <span>Continue with Google</span>
+          <span>{isLoading ? 'Connecting...' : 'Continue with Google'}</span>
         </button>
 
+        {/* Google notice — only shown after user clicks Google button */}
         {googleNotice && (
           <div className="p-3 mb-4 rounded-xl bg-amber-950/30 border border-amber-800/50 text-amber-300 text-xs flex items-start gap-2">
             <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
@@ -97,10 +105,11 @@ export default function LoginPage() {
           </div>
         )}
 
-        {error && (
+        {/* Login error — only shown after user submits email/password form */}
+        {loginError && (
           <div className="p-3 mb-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-            <span>{error}</span>
+            <span>{loginError}</span>
           </div>
         )}
 
