@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearError = () => setError(null);
 
   // Initialize auth state by checking stored token
-  // NOTE: This is a silent session restore — errors must NEVER surface to the UI here.
+  // NOTE: This is a silent session restore — NEVER touches error state.
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = getStoredToken();
@@ -47,19 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             provider: 'local',
             createdAt: userData.created_at,
           });
-        } catch (err) {
-          // Token invalid/expired — clear silently, do NOT show error to user
-          console.warn('Session verification failed; clearing invalid token.', err);
+        } catch {
+          // Token invalid/expired or backend sleeping — clear token silently.
+          // Do NOT call setError() here — this is a background restore, not a user action.
           setStoredToken(null);
           setToken(null);
           setUser(null);
-          setError(null); // ensure no stale errors show
         }
       }
       setIsLoading(false);
     };
 
     initAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -126,27 +126,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.href = res.auth_url;
         return { configured: true };
       } else {
-        // 'not configured' is informational only — show as notice, NOT as red error
+        // 'not configured' is informational — show as amber notice, NOT red error
         return {
           configured: false,
           message:
             res.message ||
-            'Google OAuth credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+            'Google OAuth credentials not configured on the server.',
         };
       }
     } catch (err: unknown) {
-      // Only show red error banner for genuine network/server failures (not 404 cold-start)
+      // ALL Google errors go to amber notice — NEVER the red error banner.
+      // The backend may be sleeping (cold start) causing 'Failed to fetch' network errors.
       const apiErr = err instanceof ApiError ? err : null;
-      if (apiErr && (apiErr.status === 404 || apiErr.status === 503)) {
-        // Backend is sleeping or route missing — treat as 'not configured' notice
-        return {
-          configured: false,
-          message: 'Backend is starting up, please wait a moment and try again.',
-        };
-      }
-      const msg = apiErr ? apiErr.message : (err instanceof Error ? err.message : 'Failed to connect to Google OAuth service.');
-      setError(msg);
-      return { configured: false, message: msg };
+      const isNetworkError = !apiErr && err instanceof Error;
+      const friendlyMsg = isNetworkError
+        ? 'The server is waking up (may take ~30 seconds). Please try again in a moment.'
+        : apiErr?.message || 'Failed to connect to Google OAuth service.';
+      return { configured: false, message: friendlyMsg };
     }
   };
 

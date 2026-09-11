@@ -17,6 +17,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     clearError();
+    setGoogleNotice(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
