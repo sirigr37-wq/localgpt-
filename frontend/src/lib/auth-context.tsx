@@ -136,11 +136,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: unknown) {
       // ALL Google errors go to amber notice — NEVER the red error banner.
-      // The backend may be sleeping (cold start) causing 'Failed to fetch' network errors.
+      // The backend may be sleeping (cold start) causing 'Failed to fetch', 404, or 'Not Found' errors.
       const apiErr = err instanceof ApiError ? err : null;
-      const isNetworkError = !apiErr && err instanceof Error;
-      const friendlyMsg = isNetworkError
-        ? 'The server is waking up (may take ~30 seconds). Please try again in a moment.'
+      const rawMsg = (apiErr?.message || (err instanceof Error ? err.message : '')).toLowerCase();
+      const isNetworkOrNotFound =
+        !apiErr ||
+        apiErr.status === 404 ||
+        apiErr.status >= 500 ||
+        rawMsg.includes('not found') ||
+        rawMsg.includes('failed to fetch');
+
+      const friendlyMsg = isNetworkOrNotFound
+        ? 'The backend server is warming up (may take ~15-30 seconds). Please click "Continue with Google" again in a moment.'
         : apiErr?.message || 'Failed to connect to Google OAuth service.';
       return { configured: false, message: friendlyMsg };
     }
