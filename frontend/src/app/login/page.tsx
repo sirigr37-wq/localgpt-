@@ -17,7 +17,6 @@ export default function LoginPage() {
   // Local error states — completely isolated from auth context background operations.
   // These are ONLY set by explicit user actions on this page.
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,21 +38,12 @@ export default function LoginPage() {
 
   const handleGoogleOAuth = async () => {
     setIsLoading(true);
-    setGoogleNotice(null);
     setLoginError(null);
     clearError();
     try {
-      const res = await initiateGoogleLogin();
-      if (!res.configured && res.message) {
-        const raw = res.message.toLowerCase();
-        if (raw.includes('not found') || raw.includes('404')) {
-          setGoogleNotice('The server is warming up (may take ~15-30 seconds). Please try again in a moment.');
-        } else {
-          setGoogleNotice(res.message);
-        }
-      }
+      await initiateGoogleLogin();
     } catch {
-      setGoogleNotice('The server is warming up. Please wait ~30 seconds and try again.');
+      // Direct fallback handled in initiateGoogleLogin
     } finally {
       setIsLoading(false);
     }
@@ -101,14 +91,6 @@ export default function LoginPage() {
           </svg>
           <span>{isLoading ? 'Connecting...' : 'Continue with Google'}</span>
         </button>
-
-        {/* Google notice — only shown after user clicks Google button */}
-        {googleNotice && (
-          <div className="p-3 mb-4 rounded-xl bg-amber-950/30 border border-amber-800/50 text-amber-300 text-xs flex items-start gap-2">
-            <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-            <p className="leading-relaxed">{googleNotice}</p>
-          </div>
-        )}
 
         {/* Login error — only shown after user submits email/password form */}
         {loginError && (

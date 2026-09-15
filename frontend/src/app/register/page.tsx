@@ -16,7 +16,6 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [googleNotice, setGoogleNotice] = useState<string | null>(null);
 
   React.useEffect(() => {
     clearError();
@@ -50,20 +49,11 @@ export default function RegisterPage() {
 
   const handleGoogleOAuth = async () => {
     setIsLoading(true);
-    setGoogleNotice(null);
     clearError();
     try {
-      const res = await initiateGoogleLogin();
-      if (!res.configured && res.message) {
-        const raw = res.message.toLowerCase();
-        if (raw.includes('not found') || raw.includes('404')) {
-          setGoogleNotice('The server is warming up (may take ~15-30 seconds). Please try again in a moment.');
-        } else {
-          setGoogleNotice(res.message);
-        }
-      }
+      await initiateGoogleLogin();
     } catch {
-      setGoogleNotice('The server is warming up. Please wait ~30 seconds and try again.');
+      // Direct fallback handled in initiateGoogleLogin
     } finally {
       setIsLoading(false);
     }
@@ -111,13 +101,6 @@ export default function RegisterPage() {
           </svg>
           <span>Sign up with Google</span>
         </button>
-
-        {googleNotice && (
-          <div className="p-3 mb-4 rounded-xl bg-amber-950/30 border border-amber-800/50 text-amber-300 text-xs flex items-start gap-2">
-            <Info className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-            <p className="leading-relaxed">{googleNotice}</p>
-          </div>
-        )}
 
         {localError && (
           <div className="p-3 mb-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
