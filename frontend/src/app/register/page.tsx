@@ -52,10 +52,20 @@ export default function RegisterPage() {
     setIsLoading(true);
     setGoogleNotice(null);
     clearError();
-    const res = await initiateGoogleLogin();
-    setIsLoading(false);
-    if (!res.configured && res.message) {
-      setGoogleNotice(res.message);
+    try {
+      const res = await initiateGoogleLogin();
+      if (!res.configured && res.message) {
+        const raw = res.message.toLowerCase();
+        if (raw.includes('not found') || raw.includes('404')) {
+          setGoogleNotice('The server is warming up (may take ~15-30 seconds). Please try again in a moment.');
+        } else {
+          setGoogleNotice(res.message);
+        }
+      }
+    } catch {
+      setGoogleNotice('The server is warming up. Please wait ~30 seconds and try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -45,10 +45,15 @@ export default function LoginPage() {
     try {
       const res = await initiateGoogleLogin();
       if (!res.configured && res.message) {
-        setGoogleNotice(res.message);
+        const raw = res.message.toLowerCase();
+        if (raw.includes('not found') || raw.includes('404')) {
+          setGoogleNotice('The server is warming up (may take ~15-30 seconds). Please try again in a moment.');
+        } else {
+          setGoogleNotice(res.message);
+        }
       }
     } catch {
-      setGoogleNotice('The server is waking up. Please wait ~30 seconds and try again.');
+      setGoogleNotice('The server is warming up. Please wait ~30 seconds and try again.');
     } finally {
       setIsLoading(false);
     }
